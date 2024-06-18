@@ -1,0 +1,61 @@
+---
+import CircleIndicator from "./CircleIndicator.astro";
+---
+
+<div class="panel-bar">
+  <div class="bar-indicators">
+    <CircleIndicator fillColor="green" fillPercent="100"
+                     tooltip="Video Bitrate (current vs. selected)">
+      100
+    </CircleIndicator>
+    <CircleIndicator fillColor="teal" fillPercent="75"
+                     tooltip="FPS (current vs. selected)">
+      75
+    </CircleIndicator>
+    <CircleIndicator fillColor="red" fillPercent="10"
+                     tooltip="Max Connection Latency (ms)">
+      5
+    </CircleIndicator>
+  </div>
+
+  <hr class="bar-vertical-hr"/>
+
+  <div class="bar-indicators">
+    <CircleIndicator fillColor="dodgerblue" fillPercent="8"
+                     tooltip="Server CPU Usage">
+      8
+    </CircleIndicator>
+    <CircleIndicator fillColor="darkslategray" fillPercent="15"
+                     tooltip="Server RAM Usage">
+      7.42
+    </CircleIndicator>
+  </div>
+
+  <hr class="bar-vertical-hr"/>
+
+  <div class="bar-indicators">
+    <CircleIndicator fillColor="dodgerblue" fillPercent="12"
+                     tooltip="Server GPU Usage">
+      12
+    </CircleIndicator>
+    <CircleIndicator fillColor="darkslategray" fillPercent="60"
+                     tooltip="Server VRAM Usage">
+      1.18
+    </CircleIndicator>
+  </div>
+</div>
+
+<style>
+  .panel-bar {
+    @apply relative flex flex-row items-center justify-around w-full bg-selkies-fill rounded-full px-3 py-2
+           border-2 border-selkies-fill-lighter shadow-sm shadow-selkies-fill-darker;
+  }
+
+  .bar-indicators {
+    @apply flex flex-row h-full items-start justify-center gap-1;
+  }
+
+  .bar-vertical-hr {
+    @apply border-0 h-full pl-0.5 bg-selkies-fill-lighter mx-2;
+  }
+</style>

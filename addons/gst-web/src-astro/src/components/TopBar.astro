@@ -1,0 +1,28 @@
+---
+import {SelkiesGitHubPage} from "../scripts/constants";
+---
+
+<div class="absolute w-full h-0 flex justify-center">
+  <div class="top-bar">
+    <span>Video Latency: 0 ms</span>
+    <hr class="vertical-hr"/>
+    <span>Audio Latency: 0 ms</span>
+    <hr class="vertical-hr"/>
+    <span>Video Encoder: Software (x264enc)</span>
+    <hr class="vertical-hr"/>
+    <span>Framerate: 60 FPS</span>
+    <hr class="vertical-hr"/>
+    <span>Bitrate: 0 mbps</span>
+  </div>
+</div>
+
+<style>
+  .top-bar {
+    @apply absolute flex flex-row bg-selkies-fill w-fit h-10 items-center text-selkies-text justify-around gap-4 px-2
+           rounded-b-lg border-2 border-selkies-fill-lighter shadow-md shadow-selkies-fill-darker;
+  }
+
+  .vertical-hr {
+    @apply border-0 bg-selkies-accent w-0.5 h-5;
+  }
+</style>

@@ -1,0 +1,38 @@
+---
+const { fillColor, fillPercent, tooltip } = Astro.props;
+---
+
+<div class="circle-indicator" data-tooltip-target={tooltip && tooltip.length ? ("tooltip-" + tooltip) : null} data-tooltip-placement="top">
+  <div class="color-filler-holder">
+    <div class="color-filler" style={`background-color: ${fillColor}; height: ${fillPercent}%`}></div>
+  </div>
+  <div class="indicator-slot">
+    <slot/>
+  </div>
+</div>
+<div class="absolute w-0 h-0">
+  <div id={"tooltip-" + tooltip} role="tooltip" class="invisible panel-tooltip">
+    {tooltip}
+  </div>
+</div>
+
+<style>
+  .circle-indicator {
+    @apply flex flex-col items-center justify-center size-16 rounded-full bg-selkies-fill-darker
+           text-selkies-text border-4 border-selkies-fill-lighter shadow-sm shadow-selkies-fill-darker;
+  }
+
+  .indicator-slot {
+    @apply absolute text-selkies-text text-xs;
+  }
+
+  .color-filler-holder {
+    @apply relative inline-flex h-full w-full items-end justify-center;
+    clip-path: circle(1.5rem at center);
+  }
+
+  .color-filler {
+    transition: height 0.5s ease;
+    @apply relative w-full;
+  }
+</style>

@@ -1,0 +1,168 @@
+---
+import { Icon } from "astro-icon/components"
+import {
+  AudioBitRateOptions,
+  type NumericOption,
+  SelkiesGitHubPage,
+  VideoBitRateOptions,
+  VideoFramerateOptions
+} from "../scripts/constants";
+import PanelOption from "./PanelOption.astro";
+import PanelStats from "./PanelStats.astro";
+import PanelIndicatorBar from "./PanelIndicatorBar.astro";
+import CircleButton from "./CircleButton.astro";
+import {Themes} from "../scripts/themes";
+---
+
+<div id="right-side-drawer" class="popout-drawer translate-x-full" tabindex="-1">
+  <div class="popout-panel">
+    <div class="absolute -left-8 w-0 h-full flex items-center -z-10">
+      <button id="right-side-drawer-button" type="button" class="popout-button">
+        <Icon name="material-symbols:chevron-left-rounded"></Icon>
+      </button>
+    </div>
+
+    <div class="flex flex-col w-full justify-center items-center">
+      <div class="bar-interactives">
+        <a class="col-span-3 ml-auto selkies-project-link" href={SelkiesGitHubPage}>
+          <img class="w-full h-auto" src="/selkies-logo.png">
+        </a>
+
+        <div class="col-span-6 bar-buttons">
+          <CircleButton tooltip="Enter Fullscreen Mode (Ctrl+Shift+F)">
+            <Icon name="material-symbols:fullscreen-rounded"></Icon>
+          </CircleButton>
+
+          <CircleButton tooltip="Enable Clipboard Access">
+            <Icon name="material-symbols:content-copy-rounded"></Icon>
+          </CircleButton>
+
+          <CircleButton tooltip="Return To Launcher">
+            <Icon name="material-symbols:home-rounded"></Icon>
+          </CircleButton>
+
+          <CircleButton tooltip="Gamepad Connected">
+            <Icon name="material-symbols:stadia-controller"></Icon>
+          </CircleButton>
+
+          <CircleButton tooltip="Logged In As Guest">
+            <Icon name="material-symbols:account-circle"></Icon>
+          </CircleButton>
+        </div>
+
+        <button class="col-span-3 mr-auto theme-button"
+                data-dropdown-placement="bottom"
+                data-dropdown-offset-distance="0"
+                data-dropdown-toggle="theme-dropdown-menu">
+          <Icon name="material-symbols:palette-outline"></Icon>
+          <span>Theme</span>
+          <Icon name="material-symbols:arrow-drop-down-rounded"></Icon>
+        </button>
+        <div id="theme-dropdown-menu" class="hidden dropdown-menu">
+          <ul>
+            {Themes.map((theme: string) => (
+              <li>
+                <a href="#" class="dropdown-item">
+                  {theme}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <PanelIndicatorBar></PanelIndicatorBar>
+    </div>
+
+    <hr class="section-divider"/>
+
+    <div class="flex flex-col w-full gap-2">
+      <PanelOption title="Video Bitrate" options={VideoBitRateOptions}></PanelOption>
+      <PanelOption title="Video Framerate" options={VideoFramerateOptions}></PanelOption>
+      <PanelOption title="Audio Bitrate" options={AudioBitRateOptions}></PanelOption>
+    </div>
+
+    <hr class="section-divider"/>
+
+    <PanelStats></PanelStats>
+  </div>
+</div>
+
+<style>
+  .popout-drawer {
+    @apply fixed h-full w-fit right-0 flex items-center justify-end z-40;
+  }
+
+  .popout-panel {
+    @apply relative h-5/6 w-full flex flex-col items-center justify-start bg-selkies-fill overflow-y-auto
+           text-selkies-text p-2 rounded-l-lg border-l-2 border-y-2 border-selkies-fill-lighter gap-4
+           shadow-md shadow-selkies-fill-darker;
+  }
+
+  .popout-button {
+    @apply fixed w-8 h-24 rounded-l-xl text-selkies-text border-r-0 rounded-r-none;
+    [data-icon] {
+      @apply inline-flex size-8;
+    }
+  }
+  .popout-button-open {
+    [data-icon] {
+      @apply rotate-180;
+    }
+  }
+
+  .bar-interactives {
+    @apply grid grid-cols-12 w-full items-center gap-1;
+  }
+
+  .selkies-project-link {
+    @apply w-28 p-2 border-2 border-selkies-fill-lighter hover:bg-selkies-fill active:bg-selkies-fill-darker
+           bg-selkies-fill-lighter rounded-xl shadow-sm shadow-selkies-fill-darker;
+  }
+
+  .bar-buttons {
+    @apply flex flex-row w-fit items-center justify-center gap-1 bg-selkies-fill p-2
+           rounded-t-3xl border-t-2 border-x-2 border-selkies-fill-lighter mx-auto;
+  }
+
+  .theme-button {
+    @apply p-2;
+    span {
+      @apply text-selkies-text text-sm ml-1;
+    }
+  }
+
+  .section-divider {
+    @apply relative w-10/12 mx-auto border-0 pt-0.5 bg-selkies-fill-lighter;
+  }
+</style>
+
+<script>
+  import { Drawer } from "flowbite";
+  import type { InstanceOptions } from 'flowbite';
+  import type { DrawerOptions, DrawerInterface } from 'flowbite';
+
+  const rightSideDrawer = document.getElementById("right-side-drawer");
+  const rightSideDrawerButton = document.getElementById("right-side-drawer-button");
+
+  if (rightSideDrawer && rightSideDrawerButton) {
+    const opts: DrawerOptions = {
+      placement: "right",
+      edge: true,
+      onHide() {
+        rightSideDrawerButton.classList.remove("popout-button-open");
+      },
+      onShow() {
+        rightSideDrawerButton.classList.add("popout-button-open");
+      },
+    };
+
+    const instOpts: InstanceOptions = {
+      id: "right-side-drawer",
+      override: true,
+    }
+
+    const drawer: DrawerInterface = new Drawer(rightSideDrawer, opts, instOpts);
+    rightSideDrawerButton.addEventListener("click", () => drawer.toggle());
+  }
+</script>

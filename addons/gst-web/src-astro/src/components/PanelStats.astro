@@ -1,0 +1,56 @@
+---
+---
+
+<div class="panel-stats">
+  <h5 class="mx-auto text-lg">Statistics</h5>
+  <hr/>
+
+  <div class="panel-stats-scroller">
+    <div class="panel-substats">
+      <u>Peer Connection Statistics</u>
+      <span>Peer Connection State: Replace</span>
+      <span>Peer Connection Type: Replace</span>
+      <span>Packets Received: 0</span>
+      <span>Packets Lost: 0</span>
+      <span>Bytes Received: 0</span>
+      <span>Bytes Sent: 0</span>
+    </div>
+
+    <div class="panel-substats">
+      <u>Video Statistics</u>
+      <span>Latency: 0 ms</span>
+      <span>Video: Replace</span>
+      <span>Video Encoder: Replace</span>
+      <span>Window Size: 1920x1080</span>
+      <span>Framerate: 60 FPS</span>
+      <span>Bitrate: 8 mbps</span>
+      <span>Available Receive Bandwidth: 0</span>
+    </div>
+
+    <div class="panel-substats">
+      <u>Audio Statistics</u>
+      <span>Latency: 0 ms</span>
+      <span>Codec: NA</span>
+      <span>Bitrate: 128 kbps</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .panel-stats {
+    max-height: 35%;
+    @apply w-full min-h-64 flex flex-col border-2 border-selkies-fill-lighter rounded-lg p-1
+           shadow-sm shadow-selkies-fill-darker;
+    hr {
+      @apply mx-auto w-11/12 border-0 pt-0.5 bg-selkies-fill-lighter my-1;
+    }
+  }
+
+  .panel-stats-scroller {
+    @apply flex flex-col overflow-y-auto rounded-lg;
+  }
+
+  .panel-substats {
+    @apply flex flex-col bg-selkies-fill-lighter p-2 my-1 rounded-md text-selkies-text text-sm gap-1;
+  }
+</style>

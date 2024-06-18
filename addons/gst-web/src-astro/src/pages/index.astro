@@ -1,0 +1,62 @@
+---
+import TopBar from "../components/TopBar.astro";
+import PopoutPanel from "../components/PopoutPanel.astro";
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Selkies - WebRTC</title>
+  </head>
+  <body class="overflow-hidden theme-selkies-dark">
+    <img class="absolute w-full h-full" src="/desktoptest.png"/>
+
+    <TopBar></TopBar>
+    <PopoutPanel></PopoutPanel>
+
+    <script src="../scripts/flowbite.min.js"></script>
+  </body>
+</html>
+
+<style is:global>
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.selkies-fill-lighter') transparent;
+  }
+
+  button {
+    @apply flex items-center justify-center bg-selkies-fill-lighter rounded-xl
+           hover:bg-selkies-fill active:bg-selkies-fill-darker
+           border-2 border-selkies-fill-lighter shadow-sm shadow-selkies-fill-darker;
+    [data-icon] {
+      @apply inline-flex size-5;
+    }
+  }
+
+  .panel-tooltip {
+    position: fixed !important;
+    bottom: 0 !important;
+    @apply inline-block z-20 whitespace-pre-line tooltip px-2 py-1 bg-selkies-fill text-selkies-text text-sm rounded-md
+           border border-selkies-accent shadow-sm shadow-selkies-fill-darker max-w-64;
+  }
+
+  .dropdown-menu {
+    position: fixed !important;
+    max-height: 50vh;
+    @apply z-10 h-full;
+    ul {
+      max-height: inherit;
+      @apply relative overflow-y-auto text-sm w-full h-fit flex flex-col px-2 pb-2
+             bg-selkies-fill rounded-lg border-2 border-selkies-fill-lighter shadow-sm shadow-selkies-fill-darker;
+    }
+  }
+
+  .dropdown-item {
+    @apply inline-flex justify-center items-center w-full whitespace-nowrap px-2 py-1
+           bg-selkies-fill-lighter hover:bg-selkies-fill active:bg-selkies-fill-darker
+           mt-2 rounded-md text-selkies-text border-2 border-selkies-fill-lighter shadow-sm shadow-selkies-fill-darker;
+  }
+</style>

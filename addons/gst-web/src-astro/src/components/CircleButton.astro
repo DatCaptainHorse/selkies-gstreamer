@@ -1,0 +1,24 @@
+---
+const { tooltip } = Astro.props;
+---
+
+<button class="circle-button" data-tooltip-target={tooltip && tooltip.length ? ("tooltip-" + tooltip) : null} data-tooltip-placement="top">
+  <slot/>
+</button>
+<div class="absolute w-0 h-0">
+  <div id={"tooltip-" + tooltip} role="tooltip" class="invisible panel-tooltip">
+    {tooltip}
+  </div>
+</div>
+
+<style>
+  .circle-button {
+    @apply size-10 text-selkies-text rounded-full bg-selkies-fill-lighter shadow-sm shadow-selkies-fill-darker flex justify-center items-center;
+    &:hover {
+      @apply bg-selkies-fill border-2 border-selkies-fill-lighter;
+    }
+    [data-icon] {
+      @apply text-selkies-text size-6;
+    }
+  }
+</style>

@@ -1,0 +1,41 @@
+---
+interface Props {
+  title: string;
+  options: NumericOption[];
+}
+
+const { title, options }: Props = Astro.props;
+import { Icon } from 'astro-icon/components'
+import type {NumericOption} from "../scripts/constants";
+---
+
+<button type="button" class="dropdown-button"
+        data-dropdown-toggle={title + "-dropdown"}
+        data-dropdown-offset-distance="0"
+        data-dropdown-placement="left-end">
+  <Icon name="material-symbols:arrow-left-rounded"></Icon>
+  <span>{title}</span>
+</button>
+<div id={title + "-dropdown"} class="hidden dropdown-menu">
+  <ul>
+    {options.map((option: NumericOption) => (
+      <li>
+        <a href="#" class="dropdown-item">
+          {option.text}
+        </a>
+      </li>
+    ))}
+  </ul>
+</div>
+
+<style>
+  .dropdown-button {
+    @apply p-1 w-full;
+    [data-icon] {
+      @apply inline-flex absolute left-1 size-10;
+    }
+    span {
+      @apply inline-flex mx-auto text-selkies-text;
+    }
+  }
+</style>
