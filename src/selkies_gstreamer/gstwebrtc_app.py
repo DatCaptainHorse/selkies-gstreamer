@@ -44,11 +44,13 @@ try:
 except Exception as e:
     msg = """ERROR: could not find working GStreamer-Python installation.
 
-If GStreamer is installed at a certain location, set the path to the environment variable GSTREAMER_PATH, then make sure your environment is set correctly using the below commands:
+If GStreamer is installed at a certain location, set the path to the environment variable GSTREAMER_PATH, then make sure your environment is set correctly using the below commands (for Debian-like distributions):
 
 export GSTREAMER_PATH="${GSTREAMER_PATH:-$(pwd)}"
 export PATH="${GSTREAMER_PATH}/bin${PATH:+:${PATH}}"
 export LD_LIBRARY_PATH="${GSTREAMER_PATH}/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+export GST_PLUGIN_PATH="${GSTREAMER_PATH}/lib/x86_64-linux-gnu/gstreamer-1.0${GST_PLUGIN_PATH:+:${GST_PLUGIN_PATH}}"
+export GST_PLUGIN_SYSTEM_PATH="${XDG_DATA_HOME:-${HOME:-~}/.local/share}/gstreamer-1.0/plugins:/usr/lib/x86_64-linux-gnu/gstreamer-1.0${GST_PLUGIN_SYSTEM_PATH:+:${GST_PLUGIN_SYSTEM_PATH}}"
 export GI_TYPELIB_PATH="${GSTREAMER_PATH}/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/x86_64-linux-gnu/girepository-1.0${GI_TYPELIB_PATH:+:${GI_TYPELIB_PATH}}"
 export PYTHONPATH="${GSTREAMER_PATH}/lib/python3/dist-packages${PYTHONPATH:+:${PYTHONPATH}}"
 
@@ -63,7 +65,7 @@ class GSTWebRTCAppError(Exception):
     pass
 
 class GSTWebRTCApp:
-    def __init__(self, stun_servers=None, turn_servers=None, audio_channels=2, framerate=30, encoder=None, gpu_id=0, video_bitrate=2000, audio_bitrate=96000, keyframe_distance=-1.0, congestion_control=False, video_packetloss_percent=0.0, audio_packetloss_percent=10.0):
+    def __init__(self, stun_servers=None, turn_servers=None, audio_channels=2, framerate=30, encoder=None, gpu_id=0, video_bitrate=2000, audio_bitrate=96000, keyframe_distance=-1.0, congestion_control=False, video_packetloss_percent=0.0, audio_packetloss_percent=0.0):
         """Initialize GStreamer WebRTC app.
 
         Initializes GObjects and checks for required plugins.
@@ -1039,7 +1041,7 @@ class GSTWebRTCApp:
         opusenc.set_property("dtx", True)
         # OPUS_FRAME: Modify all locations with "OPUS_FRAME:"
         # Browser-side SDP munging ("minptime=3"/"minptime=5") is required if frame-size < 10
-        opusenc.set_property("frame-size", "2.5")
+        opusenc.set_property("frame-size", "10")
         opusenc.set_property("perfect-timestamp", True)
         opusenc.set_property("max-payload-size", 4000)
         # In-band FEC in Opus
@@ -1548,7 +1550,7 @@ class GSTWebRTCApp:
                 sdp_text = re.sub(r'sps-pps-idr-in-keyframe=\d+', r'sps-pps-idr-in-keyframe=1', sdp_text)
         if "opus/" in sdp_text.lower():
             # OPUS_FRAME: Add ptime explicitly to SDP offer
-            sdp_text = re.sub(r'([^-]sprop-[^\r\n]+)', r'\1\r\na=ptime:3', sdp_text)
+            sdp_text = re.sub(r'([^-]sprop-[^\r\n]+)', r'\1\r\na=ptime:10', sdp_text)
         # Set final SDP offer
         loop.run_until_complete(self.on_sdp('offer', sdp_text))
 

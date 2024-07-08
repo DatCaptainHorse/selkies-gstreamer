@@ -1,4 +1,4 @@
-export DISPLAY=:0
+export DISPLAY=:20
 unset WAYLAND_DISPLAY
 export XSERVER=${XSERVER:-XVFB}
 
@@ -17,13 +17,11 @@ trap cleanup SIGINT SIGKILL EXIT
 
 # Start Xvfb Xserver
 if [ "${XSERVER}" = "XVFB" ]; then
-    Xvfb -screen :0 8192x4096x24 +extension "COMPOSITE" +extension "DAMAGE" +extension "GLX" +extension "RANDR" +extension "RENDER" +extension "MIT-SHM" +extension "XFIXES" +extension "XTEST" +iglx +render -nolisten "tcp" -noreset -shmem >/tmp/Xvfb.log 2>&1 &
+    Xvfb "${DISPLAY}" -screen 0 8192x4096x24 +extension "COMPOSITE" +extension "DAMAGE" +extension "GLX" +extension "RANDR" +extension "RENDER" +extension "MIT-SHM" +extension "XFIXES" +extension "XTEST" +iglx +render -nolisten "tcp" -ac -noreset -shmem >/tmp/Xvfb.log 2>&1 &
 fi
 
-# Wait for X11 to start
-echo "Waiting for X socket"
-until [ -S "/tmp/.X11-unix/X${DISPLAY/:/}" ]; do sleep 1; done
-echo "X socket is ready"
+# Wait for X server to start
+echo 'Waiting for X Socket' && until [ -S "/tmp/.X11-unix/X${DISPLAY#*:}" ]; do sleep 0.5; done && echo 'X Server is ready'
 
 # Disable screen saver
 xset s off
@@ -32,7 +30,7 @@ xset s noblank
 # Disable power management
 xset -dpms
 
-# Start pulse audio server
+# Start PulseAudio server
 export PULSE_SERVER=tcp:127.0.0.1:4713
 sudo /usr/bin/pulseaudio -k >/dev/null 2>&1
 sudo /usr/bin/pulseaudio --system --verbose --log-target=file:/tmp/pulseaudio.log --realtime=true --disallow-exit -L 'module-native-protocol-tcp auth-ip-acl=127.0.0.0/8 port=4713 auth-anonymous=1' &

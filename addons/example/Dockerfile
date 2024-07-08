@@ -10,24 +10,23 @@ ARG PY_BUILD_IMAGE=ghcr.io/selkies-project/selkies-gstreamer/py-build:main
 ARG WEB_IMAGE=ghcr.io/selkies-project/selkies-gstreamer/gst-web:main
 ARG JS_BASE_IMAGE=ghcr.io/selkies-project/selkies-gstreamer/js-interposer
 ARG JS_BASE_IMAGE_RELEASE=main
-FROM ${GSTREAMER_BASE_IMAGE}:${GSTREAMER_BASE_IMAGE_RELEASE}-ubuntu${DISTRIB_RELEASE} as selkies-gstreamer
-FROM ${PY_BUILD_IMAGE} as selkies-build
-FROM ${WEB_IMAGE} as selkies-web
-FROM ${JS_BASE_IMAGE}:${JS_BASE_IMAGE_RELEASE}-ubuntu${DISTRIB_RELEASE} as selkies-js-interposer
+FROM ${GSTREAMER_BASE_IMAGE}:${GSTREAMER_BASE_IMAGE_RELEASE}-ubuntu${DISTRIB_RELEASE} AS selkies-gstreamer
+FROM ${PY_BUILD_IMAGE} AS selkies-build
+FROM ${WEB_IMAGE} AS selkies-web
+FROM ${JS_BASE_IMAGE}:${JS_BASE_IMAGE_RELEASE}-ubuntu${DISTRIB_RELEASE} AS selkies-js-interposer
 FROM ubuntu:${DISTRIB_RELEASE}
 ARG DISTRIB_RELEASE
 
-LABEL maintainer "https://github.com/danisla,https://github.com/ehfd"
+LABEL maintainer="https://github.com/danisla,https://github.com/ehfd"
 
 ARG DEBIAN_FRONTEND=noninteractive
 # Configure rootless user environment for constrained conditions without escalated root privileges inside containers
 ARG TZ=UTC
-ARG PASSWD=mypasswd
+ENV PASSWD=mypasswd
 RUN apt-get clean && apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-recommends -y \
         apt-utils \
         dbus-user-session \
         fakeroot \
-        fuse \
         locales \
         ssl-cert \
         sudo \
@@ -39,18 +38,17 @@ RUN apt-get clean && apt-get update && apt-get dist-upgrade -y && apt-get instal
     # Only use sudo-root for root-owned directory (/dev, /proc, /sys) or user/group permission operations, not for apt-get installation or file/directory operations
     mv -f /usr/bin/sudo /usr/bin/sudo-root && \
     ln -snf /usr/bin/fakeroot /usr/bin/sudo && \
-    groupadd -g 1000 ubuntu || true && \
-    useradd -ms /bin/bash ubuntu -u 1000 -g 1000 || true && \
+    groupadd -g 1000 ubuntu || echo 'Failed to add ubuntu group' && \
+    useradd -ms /bin/bash ubuntu -u 1000 -g 1000 || echo 'Failed to add ubuntu user' && \
     usermod -a -G adm,audio,cdrom,dialout,dip,fax,floppy,games,input,lp,plugdev,render,ssl-cert,sudo,tape,tty,video,voice ubuntu && \
     echo "ubuntu ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers && \
     echo "ubuntu:${PASSWD}" | chpasswd && \
-    chown -R -f --no-preserve-root ubuntu:ubuntu / || true && \
-    chown -R -f --no-preserve-root root:root /usr/bin/sudo-root /etc/sudo.conf /etc/sudoers /etc/sudoers.d /etc/sudo_logsrvd.conf /usr/libexec/sudo || true && chmod -f 4755 /usr/bin/sudo-root || true
+    chown -R -f --no-preserve-root ubuntu:ubuntu / || echo 'Failed to set filesystem ownership to ubuntu user'
 
 # Set locales
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8
+ENV LANG="en_US.UTF-8"
+ENV LANGUAGE="en_US:en"
+ENV LC_ALL="en_US.UTF-8"
 
 USER 1000
 # Use BUILDAH_FORMAT=docker in buildah
@@ -100,7 +98,9 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
         libdrm2 \
         libegl1 \
         libgl1 \
+        libopengl0 \
         libgles1 \
+        libgles2 \
         libglvnd0 \
         libglx0 \
         wayland-protocols \
@@ -110,6 +110,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
         xsel \
         xdotool \
         x11-utils \
+        x11-xkb-utils \
         x11-xserver-utils \
         xserver-xorg-core \
         libx11-xcb1 \
@@ -117,17 +118,20 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
         libxkbcommon0 \
         libxdamage1 \
         libxfixes3 \
+        libxv1 \
         libxtst6 \
         libxext6 \
         # Graphics driver dependencies
-        va-driver-all \
-        i965-va-driver-shaders \
-        intel-media-va-driver-non-free \
+        mesa-va-drivers \
         libva2 \
         vainfo \
+        vdpau-driver-all \
+        libvdpau-va-gl1 \
+        vdpauinfo \
         mesa-vulkan-drivers \
         vulkan-tools \
-        nvtop && \
+        radeontop && \
+    if [ "$(dpkg --print-architecture)" = "amd64" ]; then apt-get install --no-install-recommends -y intel-gpu-tools nvtop va-driver-all i965-va-driver-shaders intel-media-va-driver-non-free; fi && \
     if [ "$(grep VERSION_ID= /etc/os-release | cut -d= -f2 | tr -d '\"')" \> "20.04" ]; then apt-get install --no-install-recommends -y xcvt libopenh264-dev libde265-0 svt-av1 aom-tools; else apt-get install --no-install-recommends -y mesa-utils-extra; fi && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /var/cache/debconf/* /var/log/* /tmp/* /var/tmp/* && \
     echo "/usr/local/nvidia/lib" >> /etc/ld.so.conf.d/nvidia.conf && \
@@ -151,17 +155,19 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     }\n\
 }" > /usr/share/glvnd/egl_vendor.d/10_nvidia.json
 # Expose NVIDIA libraries and paths
-ENV PATH /usr/local/nvidia/bin${PATH:+:${PATH}}
-ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+${LD_LIBRARY_PATH}:}/usr/local/nvidia/lib:/usr/local/nvidia/lib64
+ENV PATH="/usr/local/nvidia/bin${PATH:+:${PATH}}"
+ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+${LD_LIBRARY_PATH}:}/usr/local/nvidia/lib:/usr/local/nvidia/lib64"
 # Make all NVIDIA GPUs visible by default
-ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_VISIBLE_DEVICES=all
 # All NVIDIA driver capabilities should preferably be used, check `NVIDIA_DRIVER_CAPABILITIES` inside the container if things do not work
-ENV NVIDIA_DRIVER_CAPABILITIES all
+ENV NVIDIA_DRIVER_CAPABILITIES=all
 # Disable VSYNC for NVIDIA GPUs
-ENV __GL_SYNC_TO_VBLANK 0
+ENV __GL_SYNC_TO_VBLANK=0
+# Set default DISPLAY environment
+ENV DISPLAY=":20"
 
 # Install VirtualGL and make libraries available for preload
-ENV VGL_DISPLAY egl
+ENV VGL_DISPLAY=egl
 RUN cd /tmp && VIRTUALGL_VERSION="$(curl -fsSL "https://api.github.com/repos/VirtualGL/virtualgl/releases/latest" | jq -r '.tag_name' | sed 's/[^0-9\.\-]*//g')" && \
     if [ "$(dpkg --print-architecture)" = "amd64" ]; then \
     dpkg --add-architecture i386 && \
@@ -218,6 +224,7 @@ Pin-Priority: -1" > /etc/apt/preferences.d/firefox-nosnap && \
         supervisor \
         xvfb \
         xfce4 \
+        xfce4-goodies \
         xfce4-terminal \
         mesa-utils \
         adwaita-icon-theme-full \
@@ -226,7 +233,13 @@ Pin-Priority: -1" > /etc/apt/preferences.d/firefox-nosnap && \
         firefox \
         pavucontrol \
         jstest-gtk \
-        coturn && \
+        coturn \
+        # NGINX web server
+        nginx \
+        apache2-utils && \
+    # Sanitize NGINX path
+    sed -i -e 's/\/var\/log\/nginx\/access\.log/\/dev\/stdout/g' -e 's/\/var\/log\/nginx\/error\.log/\/dev\/stderr/g' -e 's/\/run\/nginx\.pid/\/tmp\/nginx\.pid/g' /etc/nginx/nginx.conf && \
+    echo "error_log /dev/stderr;" >> /etc/nginx/nginx.conf && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /var/cache/debconf/* /var/log/* /tmp/* /var/tmp/* && \
     # Prevent dialogs at Xfce4 desktop environment start
     cp -rf /etc/xdg/xfce4/panel/default.xml /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml
@@ -249,9 +262,6 @@ ARG PIP_BREAK_SYSTEM_PACKAGES=1
 COPY --chown=1000:1000 --from=selkies-build /opt/pypi/dist/${PYPI_PACKAGE}-${PACKAGE_VERSION}-py3-none-any.whl .
 RUN pip3 install --no-cache-dir --force-reinstall /opt/${PYPI_PACKAGE}-${PACKAGE_VERSION}-py3-none-any.whl
 
-# Setup global bashrc to configure X11 environment
-ENV DISPLAY ":0"
-
 # Copy scripts and configurations used to start the container
 COPY --chown=1000:1000 entrypoint.sh /etc/entrypoint.sh
 RUN chmod 755 /etc/entrypoint.sh
@@ -263,19 +273,22 @@ RUN chmod 755 /etc/supervisord.conf
 # Configure coTURN script
 RUN echo "#!/bin/bash\n\
 set -e\n\
-exec turnserver\n\
-    --verbose\n\
-    --listening-ip=0.0.0.0\n\
-    --listening-port=\${SELKIES_TURN_PORT:-3478}\n\
-    --realm=\${TURN_REALM:-example.com}\n\
-    --min-port=\${TURN_MIN_PORT:-49152}\n\
-    --max-port=\${TURN_MAX_PORT:-65535}\n\
-    --lt-cred-mech\n\
-    --user selkies:\${TURN_RANDOM_PASSWORD}\n\
-    --no-cli\n\
-    --allow-loopback-peers\n\
-    --db /tmp/coturn-turndb\n\
-    \${EXTRA_ARGS} \$@\
+turnserver \
+    --verbose \
+    --listening-ip=\"0.0.0.0\" \
+    --listening-ip=\"::\" \
+    --listening-port=\"\${SELKIES_TURN_PORT:-3478}\" \
+    --realm=\"\${TURN_REALM:-example.com}\" \
+    --external-ip=\"\${SELKIES_TURN_HOST:-\$(curl -fsSL checkip.amazonaws.com)}\" \
+    --min-port=\"\${TURN_MIN_PORT:-49152}\" \
+    --max-port=\"\${TURN_MAX_PORT:-65535}\" \
+    --channel-lifetime=\"\${TURN_CHANNEL_LIFETIME:--1}\" \
+    --lt-cred-mech \
+    --user \"selkies:\${TURN_RANDOM_PASSWORD}\" \
+    --no-cli \
+    --cli-password=\"\${TURN_RANDOM_PASSWORD:-\$(tr -dc 'A-Za-z0-9' < /dev/urandom 2>/dev/null | head -c 24)}\" \
+    --allow-loopback-peers \
+    \${TURN_EXTRA_ARGS} \$@\
 " > /etc/start-turnserver.sh && chmod 755 /etc/start-turnserver.sh
 
 # Configure bashrc to show /etc/motd and /etc/issue
@@ -295,10 +308,26 @@ python3 signalling_web.py --port 8080 --web_root=/opt/gst-web &\
 
 SHELL ["/bin/sh", "-c"]
 
+USER 0
+# Enable sudo through sudo-root with uid 0
+RUN if [ -d "/usr/libexec/sudo" ]; then SUDO_LIB="/usr/libexec/sudo"; else SUDO_LIB="/usr/lib/sudo"; fi && \
+    chown -R -f --no-preserve-root root:root /usr/bin/sudo-root /etc/sudo.conf /etc/sudoers /etc/sudoers.d /etc/sudo_logsrvd.conf "${SUDO_LIB}" || echo 'Failed to provide root permissions to sudo' && \
+    chmod -f 4755 /usr/bin/sudo-root || echo 'Failed to set chmod to sudo-root'
 USER 1000
-ENV SHELL /bin/bash
+
+ENV PIPEWIRE_LATENCY="32/48000"
+ENV XDG_RUNTIME_DIR=/tmp/runtime-ubuntu
+ENV PIPEWIRE_RUNTIME_DIR="${PIPEWIRE_RUNTIME_DIR:-${XDG_RUNTIME_DIR:-/tmp}}"
+ENV PULSE_RUNTIME_PATH="${PULSE_RUNTIME_PATH:-${XDG_RUNTIME_DIR:-/tmp}/pulse}"
+ENV PULSE_SERVER="${PULSE_SERVER:-unix:${PULSE_RUNTIME_PATH:-${XDG_RUNTIME_DIR:-/tmp}/pulse}/native}"
+
+# dbus-daemon to the below address is required during startup
+ENV DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR:-/tmp}/dbus-session-${DISPLAY#*:}"
+
+USER 1000
+ENV SHELL=/bin/bash
 ENV USER=ubuntu
-ENV XDG_RUNTIME_DIR /tmp/runtime-user
+ENV HOME=/home/ubuntu
 WORKDIR /home/ubuntu
 
 EXPOSE 8080
